@@ -18,9 +18,15 @@ const gameBoard = (() => {
     ];
 
     let gameSession = true;
+    let winningPlayer = '';
+    let winningMove;
 
-    function getBoard() {
-        return board;
+    function getWinningPlayer() {
+        return winningPlayer;
+    }
+
+    function getWinningMove() {
+        return winningMove;
     }
 
     function setBoard(i, symbol) {
@@ -28,23 +34,24 @@ const gameBoard = (() => {
     }
 
     function checkWin() {
-
-        // check for winning moves or no moves left
-        winningMoves.forEach(winningMove => {
+        // check for winning moves
+        winningMoves.forEach(move => {
             let check = '';
             for (let i = 0; i < 3; i++) {
-                check += board[winningMove[i]];
+                check += board[move[i]];
             }
 
             if (check === 'XXX' || check === 'OOO') {
                 gameSession = false;
-                console.log(`gamesession: ${gameSession}, winning move: ${winningMove}`);
-            } else if (!board.includes('')) {
-                gameSession = false;
-                console.log(`gamesession: ${gameSession}, no moves left`);
+                winningMove = move;
+                check === 'XXX' ? winningPlayer = 'P1' : winningPlayer = 'P2';
             }
         })
 
+        // no moves check comes after win check
+        if (gameSession === true && !board.includes('')) {
+            gameSession = false;
+        }
     }
 
     function getSession() {
@@ -56,56 +63,92 @@ const gameBoard = (() => {
             board[i] = '';
         }
         gameSession = true;
+        winningPlayer = '';
+        winningMove = [];
         console.log(`gamesession: ${gameSession}`);
     }
 
-    return { getBoard, setBoard, checkWin, getSession, clearBoard }
+    return { getWinningPlayer, getWinningMove, setBoard, checkWin, getSession, clearBoard }
 })();
 
 
-function createPlayer(name, symbol) {
+function createPlayer(symbol) {
     let score = 0;
     const getScore = () => score;
     const giveScore = () => score++;
 
-    return { name, symbol, getScore, giveScore };
+    return { symbol, getScore, giveScore };
 }
 
 (function gameController() {
     // create players
-    let playerOne = createPlayer('Player 1', 'X');
-    let playerTwo = createPlayer('Player 2', 'O');
+    let playerOne = createPlayer('X');
+    let playerTwo = createPlayer('O');
 
     // turn counter
     let playerTurn = 0;
 
     // DOM elements
-    const boardContainer = document.querySelector('.gameboard');
     const resetBtn = document.getElementById('reset-button');
     const playerOneName = document.getElementById('player-one');
     const playerTwoName = document.getElementById('player-two');
+    const cells = document.getElementsByClassName('cell');
 
+    const playerOneScore = document.getElementById('score-one');
+    const playerTwoScore = document.getElementById('score-two');
+    const winBanner = document.querySelector('.win-banner');
+
+    const playerOneCard = document.querySelector('.player-one-card');
+    const playerTwoCard = document.querySelector('.player-two-card');
+
+    // first time, highlight name card of player turn
+    playerTurn % 2 ?
+        playerTwoCard.style.backgroundColor = 'rgb(240,219,165)' :
+        playerOneCard.style.backgroundColor = 'rgb(240,219,165)';
+
+    // functions
+    function handleWin(player, move) {
+        // highlight winning move
+        for (let i = 0; i < move.length; i++) {
+            cells[move[i]].style.backgroundColor = 'rgb(133, 199, 147)';
+        }
+
+        // populate win banner and make visible
+        winBanner.textContent = `Player ${player} wins.`;
+        winBanner.style.visibility = "visible";
+        playerOneCard.style.backgroundColor = 'whitesmoke';
+        playerTwoCard.style.backgroundColor = 'whitesmoke';
+
+        // increment player win score
+        player === 'P1' ? playerOne.giveScore() : playerTwo.giveScore();
+        playerOneScore.textContent = playerOne.getScore();
+        playerTwoScore.textContent = playerTwo.getScore();
+    }
 
     // event handlers
-    for (let i = 0; i < 9; i++) {
-        const cell = document.createElement('div');
-        cell.classList.add('cell');
-        boardContainer.appendChild(cell);
-
-        cell.addEventListener('click', () => {
+    for (let i = 0; i < cells.length; i++) {
+        cells[i].addEventListener('click', () => {
             // only register clicks if game in session
             if (gameBoard.getSession() === true) {
                 // only change if cell is empty
-                if (cell.textContent === '') {
+                if (cells[i].textContent === '') {
                     if (playerTurn % 2) {
                         gameBoard.setBoard(i, 'O');
-                        cell.textContent = 'O';
+                        cells[i].textContent = 'O';
+                        playerOneCard.style.backgroundColor = 'rgb(240,219,165)';
+                        playerTwoCard.style.backgroundColor = 'whitesmoke';
                     } else {
                         gameBoard.setBoard(i, 'X');
-                        cell.textContent = 'X';
+                        cells[i].textContent = 'X';
+                        playerOneCard.style.backgroundColor = 'whitesmoke';
+                        playerTwoCard.style.backgroundColor = 'rgb(240,219,165)';
                     }
                     playerTurn++;
-                    gameBoard.checkWin();
+                    gameBoard.checkWin()
+
+                    if (gameBoard.getWinningPlayer()) {
+                        handleWin(gameBoard.getWinningPlayer(), gameBoard.getWinningMove());
+                    }
                 }
             }
         });
@@ -114,18 +157,18 @@ function createPlayer(name, symbol) {
     resetBtn.addEventListener('click', () => {
         // clear old board
         gameBoard.clearBoard();
-        let cells = document.getElementsByClassName('cell');
         for (let i = 0; i < cells.length; i++) {
             cells[i].textContent = '';
+            cells[i].style.backgroundColor = 'gainsboro';
         }
         playerTurn = 0;
-
-        // 
+        playerOneCard.style.backgroundColor = 'rgb(240,219,165)';
+        winBanner.style.visibility = "hidden";
+        winBanner.textContent = '';
     });
 
-
-    // allow change P1 name
     playerOneName.addEventListener('dblclick', () => {
+        // allow change P1 name
         let name = prompt('Enter player name: ', 'Player one');
         if (name === null || name === '') {
             playerOneName.textContent = 'Player 1';
@@ -134,8 +177,8 @@ function createPlayer(name, symbol) {
         }
     })
 
-    // allow change P2 name
     playerTwoName.addEventListener('dblclick', () => {
+        // allow change P2 name
         let name = prompt('Enter player name: ', 'Player two');
         if (name === null || name === '') {
             playerTwoName.textContent = 'Player 2';
@@ -144,5 +187,4 @@ function createPlayer(name, symbol) {
         }
     })
 
-    return { }
 })();

@@ -16,6 +16,19 @@
     height: 100vh;
 }
 
+.win-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 400px;
+    height: 50px;
+    background-color: white;
+    border: 3px solid black;
+
+    visibility: hidden;
+}
+
 .gameboard {
     display: grid;
     align-content: center;
@@ -25,6 +38,7 @@
 
     width: 400px;
     height: 400px;
+    margin-top: 20px;
 
     background-color: white;
     border: 3px solid black;
@@ -67,17 +81,35 @@
     background-color: whitesmoke;
 
     border: 1px solid black;
-    padding: 20px;
-    margin: 20px;
+    padding: 10px;
+    margin: 10px;
+}
+
+.score {
+    padding-top: 5px;
+}
+
+#score-one {
+    /* content: '0'; */
+    padding-left: 10px;
+    font-weight: 700;
+}
+
+#score-two {
+    /* content: '0'; */
+    padding-left: 10px;
+    font-weight: 700;
 }
 
 #player-one::after {
-    content: '  (X)';
+    content: '(X)';
+    padding-left: 10px;
     font-weight: 700;
 }
 
 #player-two::after {
-    content: '  (O)';
+    content: '(O)';
+    padding-left: 10px;
     font-weight: 700;
 }
 
@@ -91,4 +123,8 @@
     height: 40px;
     border: 3px solid black;
     border-radius: 5px;
+}
+
+#reset-button:hover {
+    background-color: rgb(179, 92, 92);
 }
